@@ -1,0 +1,16 @@
+### Create order
+
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "550e8400-e29b-41d4-a716-446655440000",
+  "totalAmount": 99.99,
+  "currency": "EUR"
+}
+
+
+### Get order
+@orderId = 55588cbd-5ea1-486b-af1b-e80cdb3a5f
+
+GET http://localhost:8080/api/orders/{{orderId}}
