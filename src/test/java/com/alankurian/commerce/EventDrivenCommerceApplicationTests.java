@@ -1,4 +1,4 @@
-package com.learn.commerce;
+package com.alankurian.commerce;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -8,7 +8,7 @@
 		<version>4.1.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.learn.commerce</groupId>
+	<groupId>com.alankurian.commerce</groupId>
 	<artifactId>event-driven-commerce</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>

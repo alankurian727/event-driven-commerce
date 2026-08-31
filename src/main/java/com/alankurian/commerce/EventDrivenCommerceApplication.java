@@ -1,4 +1,4 @@
-package com.learn.commerce;
+package com.alankurian.commerce;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
