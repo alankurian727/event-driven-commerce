@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: event-driven-commerce
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/commerce
+    username: commerce
+    password: commerce
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
