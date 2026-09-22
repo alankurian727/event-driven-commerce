@@ -22,6 +22,6 @@ Content-Type: application/json
 
 
 ### Get order
-@orderId = 8afc11a2-ba5c-4e8b-ba70-de9ee7bb78f2
+@orderId = cf5a6f1b-6b0b-4d8c-a831-1f78bd47484b
 
 GET http://localhost:8080/api/orders/{{orderId}}

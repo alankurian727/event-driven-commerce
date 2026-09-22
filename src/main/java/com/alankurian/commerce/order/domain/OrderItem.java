@@ -2,10 +2,7 @@ package com.alankurian.commerce.order.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
@@ -26,11 +23,6 @@ public class OrderItem {
 
     @Column(name = "unit_price", nullable = false, precision = 19, scale = 2)
     private BigDecimal unitPrice;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
-
 
     protected OrderItem() {
         // Required by JPA
@@ -79,9 +71,5 @@ public class OrderItem {
 
     public BigDecimal getUnitPrice() {
         return unitPrice;
-    }
-
-    void assignTo(Order order) {
-        this.order = order;
     }
 }

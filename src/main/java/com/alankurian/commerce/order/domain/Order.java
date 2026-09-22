@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -45,9 +46,8 @@ public class Order {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    @OneToMany(mappedBy = "order",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "order_id", nullable = false)
     private List<OrderItem> items = new ArrayList<>();
 
     @Transient
@@ -99,7 +99,6 @@ public class Order {
     }
 
     private void addItem(OrderItem item) {
-        item.assignTo(this);
         items.add(item);
     }
 
