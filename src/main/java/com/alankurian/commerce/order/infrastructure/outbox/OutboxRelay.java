@@ -1,12 +1,11 @@
 package com.alankurian.commerce.order.infrastructure.outbox;
 
-import com.alankurian.commerce.order.domain.event.OrderCreatedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.ObjectMapper;
+
+import java.util.List;
 
 @Component
 public class OutboxRelay {
@@ -17,19 +16,13 @@ public class OutboxRelay {
     private static final String TOPIC = "orders.created";
 
     private final OutboxClaimService claimService;
-    private final OutboxEventRepository repository;
-    private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
-    private final ObjectMapper objectMapper;
+    private final OutboxPublisher publisher;
 
     public OutboxRelay(OutboxClaimService claimService,
-            OutboxEventRepository repository,
-            KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate,
-            ObjectMapper objectMapper
+                       OutboxPublisher publisher
     ) {
         this.claimService = claimService;
-        this.repository = repository;
-        this.kafkaTemplate = kafkaTemplate;
-        this.objectMapper = objectMapper;
+        this.publisher = publisher;
     }
 
     @Scheduled(fixedDelay = 5000)
@@ -41,39 +34,12 @@ public class OutboxRelay {
     }
 
     private void publish(OutboxEvent event) {
-        var orderCreatedEvent =
-                objectMapper.readValue(
-                        event.getPayload(),
-                        OrderCreatedEvent.class
-                );
+        List<OutboxEvent> events =
+                claimService.claimEvents();
 
-        kafkaTemplate.send(
-                TOPIC,
-                event.getAggregateId().toString(),
-                orderCreatedEvent
-        ).whenComplete((result, exception) -> {
+        log.debug("Claimed {} outbox events", events.size());
 
-            if (exception != null) {
-                log.error(
-                        "Failed to publish outbox event: eventId={}",
-                        event.getId(),
-                        exception
-                );
-                return;
-            }
-
-            event.markPublished();
-            repository.save(event);
-
-            log.info(
-                    "Published outbox event: eventId={}, aggregateId={}, partition={}, offset={}",
-                    event.getId(),
-                    event.getAggregateId(),
-                    result.getRecordMetadata().partition(),
-                    result.getRecordMetadata().offset()
-            );
-        });
-
+        events.forEach(publisher::publish);
 
     }
 

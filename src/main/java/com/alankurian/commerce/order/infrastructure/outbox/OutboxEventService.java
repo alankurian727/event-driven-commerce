@@ -27,13 +27,16 @@ public class OutboxEventService {
         try {
             var payload = objectMapper.writeValueAsString(event);
 
+            var occurredAt = OffsetDateTime.now();
+
             var outboxEvent = new OutboxEvent(
                     extractEventId(event),
                     event.getClass().getSimpleName(),
                     extractAggregateId(event),
                     event.getClass().getSimpleName(),
                     payload,
-                    OffsetDateTime.now()
+                    occurredAt,
+                    occurredAt
             );
 
             repository.save(outboxEvent);

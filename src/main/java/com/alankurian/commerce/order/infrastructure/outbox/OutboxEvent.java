@@ -8,6 +8,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -40,6 +41,15 @@ public class OutboxEvent {
     @Column(name = "claimed_at")
     private OffsetDateTime claimedAt;
 
+    @Column(name = "attempt_count", nullable = false)
+    private int attemptCount;
+
+    @Column(name = "last_attempted_at")
+    private OffsetDateTime lastAttemptedAt;
+
+    @Column(name = "next_attempt_at", nullable = false)
+    private OffsetDateTime nextAttemptAt;
+
     protected OutboxEvent() {
     }
 
@@ -49,7 +59,8 @@ public class OutboxEvent {
             UUID aggregateId,
             String eventType,
             String payload,
-            OffsetDateTime occurredAt
+            OffsetDateTime occurredAt,
+            OffsetDateTime nextAttemptAt
     ) {
         this.id = id;
         this.aggregateType = aggregateType;
@@ -57,6 +68,7 @@ public class OutboxEvent {
         this.eventType = eventType;
         this.payload = payload;
         this.occurredAt = occurredAt;
+        this.nextAttemptAt = OffsetDateTime.now();
     }
 
     public UUID getId() {
@@ -83,12 +95,78 @@ public class OutboxEvent {
         return claimedAt;
     }
 
+    public int getAttemptCount() {
+        return attemptCount;
+    }
+
+    public OffsetDateTime getLastAttemptedAt() {
+        return lastAttemptedAt;
+    }
+
+    public OffsetDateTime getNextAttemptAt() {
+        return nextAttemptAt;
+    }
+
+    public void recordAttempt() {
+        this.attemptCount++;
+        this.lastAttemptedAt = OffsetDateTime.now();
+    }
+
     public void claim() {
         this.claimedAt = OffsetDateTime.now();
+    }
+
+    public void releaseClaim() {
+        this.claimedAt = null;
     }
 
     public void markPublished() {
         this.publishedAt = OffsetDateTime.now();
         this.claimedAt = null;
     }
+
+    public boolean isReadyForRetry(
+            OffsetDateTime now,
+            Duration initialDelay,
+            Duration maxDelay) {
+
+        if (lastAttemptedAt == null) {
+            return true;
+        }
+
+        var delay = calculateRetryDelay(
+                initialDelay,
+                maxDelay
+        );
+
+        return !lastAttemptedAt.plus(delay).isAfter(now);
+    }
+
+    private Duration calculateRetryDelay(
+            Duration initialDelay,
+            Duration maxDelay) {
+
+        long multiplier = 1L << Math.min(attemptCount - 1, 30);
+
+        Duration delay = initialDelay.multipliedBy(multiplier);
+
+        return delay.compareTo(maxDelay) > 0
+                ? maxDelay
+                : delay;
+    }
+
+    public void scheduleNextAttempt(Duration initialDelay, Duration maxDelay) {
+
+        long multiplier = 1L << Math.min(attemptCount - 1, 30);
+
+        Duration delay = initialDelay.multipliedBy(multiplier);
+
+        if (delay.compareTo(maxDelay) > 0) {
+            delay = maxDelay;
+        }
+
+        this.nextAttemptAt = OffsetDateTime.now().plus(delay);
+    }
+
+
 }
