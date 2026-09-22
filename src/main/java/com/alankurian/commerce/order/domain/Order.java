@@ -1,5 +1,7 @@
 package com.alankurian.commerce.order.domain;
 
+import com.alankurian.commerce.order.domain.event.DomainEvent;
+import com.alankurian.commerce.order.domain.event.OrderCreatedEvent;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,8 +10,10 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +50,9 @@ public class Order {
             orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
+    @Transient
+    private final List<DomainEvent> domainEvents = new ArrayList<>();
+
     protected Order() {
         // Required by JPA
     }
@@ -75,10 +82,25 @@ public class Order {
                 customerId,
                 currency
         );
-        order.items.addAll(items);
+        items.forEach(order::addItem);
         order.totalAmount = order.calculateTotal();
 
+        order.domainEvents.add(
+                new OrderCreatedEvent(
+                        order.id,
+                        order.customerId,
+                        order.currency,
+                        order.totalAmount,
+                        Instant.now()
+                )
+        );
+
         return order;
+    }
+
+    private void addItem(OrderItem item) {
+        item.assignTo(this);
+        items.add(item);
     }
 
     public void reserveInventory() {
@@ -173,5 +195,13 @@ public class Order {
 
     public OffsetDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public List<DomainEvent> domainEvents() {
+        return List.copyOf(domainEvents);
+    }
+
+    public void clearDomainEvents() {
+        domainEvents.clear();
     }
 }

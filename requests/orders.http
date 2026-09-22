@@ -4,13 +4,24 @@ POST http://localhost:8080/api/orders
 Content-Type: application/json
 
 {
-  "customerId": "550e8400-e29b-41d4-a716-446655440000",
-  "totalAmount": 99.99,
-  "currency": "EUR"
+  "customerId": "11111111-1111-1111-1111-111111111111",
+  "currency": "EUR",
+  "items": [
+    {
+      "productId": "22222222-2222-2222-2222-222222222222",
+      "quantity": 2,
+      "unitPrice": 19.99
+    },
+    {
+      "productId": "33333333-3333-3333-3333-333333333333",
+      "quantity": 1,
+      "unitPrice": 49.99
+    }
+  ]
 }
 
 
 ### Get order
-@orderId = 55588cbd-5ea1-486b-af1b-e80cdb3a5f
+@orderId = 8afc11a2-ba5c-4e8b-ba70-de9ee7bb78f2
 
 GET http://localhost:8080/api/orders/{{orderId}}

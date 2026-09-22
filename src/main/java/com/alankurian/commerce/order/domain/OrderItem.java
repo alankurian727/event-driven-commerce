@@ -31,6 +31,7 @@ public class OrderItem {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
+
     protected OrderItem() {
         // Required by JPA
     }
@@ -78,5 +79,9 @@ public class OrderItem {
 
     public BigDecimal getUnitPrice() {
         return unitPrice;
+    }
+
+    void assignTo(Order order) {
+        this.order = order;
     }
 }

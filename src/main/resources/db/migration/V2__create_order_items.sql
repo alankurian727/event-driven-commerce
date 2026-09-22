@@ -6,9 +6,9 @@ CREATE TABLE order_items (
      unit_price NUMERIC(19, 2) NOT NULL,
 
      CONSTRAINT fk_order_items_order
-     FOREIGN KEY (order_id)
-     REFERENCES orders(id)
-
-     CREATE INDEX idx_order_items_order_id
-     ON order_items(order_id);
+         FOREIGN KEY (order_id)
+             REFERENCES orders(id)
 );
+
+CREATE INDEX idx_order_items_order_id
+    ON order_items(order_id);
