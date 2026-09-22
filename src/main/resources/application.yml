@@ -1,6 +1,24 @@
 spring:
   application:
     name: event-driven-commerce
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      properties:
+        "[spring.json.add.type.headers]": false
+
+    consumer:
+      group-id: commerce-order-consumer
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        "[spring.json.value.default.type]": com.alankurian.commerce.order.domain.event.OrderCreatedEvent
+        "[spring.json.trusted.packages]": com.alankurian.commerce.order.domain.event
+
 
   datasource:
     url: jdbc:postgresql://localhost:5432/commerce

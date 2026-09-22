@@ -5,6 +5,7 @@ import com.alankurian.commerce.order.api.OrderResponse;
 import com.alankurian.commerce.order.domain.Order;
 import com.alankurian.commerce.order.domain.OrderItem;
 import com.alankurian.commerce.order.domain.OrderRepository;
+import com.alankurian.commerce.order.infrastructure.outbox.OutboxEventService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,12 +16,12 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
 
-    private final OrderEventPublisher eventPublisher;
+    private final OutboxEventService outboxEventService;
 
     public OrderService(OrderRepository orderRepository,
-                        OrderEventPublisher eventPublisher) {
+                        OutboxEventService outboxEventService) {
         this.orderRepository = orderRepository;
-        this.eventPublisher = eventPublisher;
+        this.outboxEventService = outboxEventService;
     }
 
     @Transactional
@@ -42,7 +43,7 @@ public class OrderService {
         );
 
         var savedOrder = orderRepository.save(order);
-        order.domainEvents().forEach(eventPublisher::publish);
+        order.domainEvents().forEach(outboxEventService::save);
         order.clearDomainEvents();
 
 

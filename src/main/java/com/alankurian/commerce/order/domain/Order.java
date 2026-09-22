@@ -87,6 +87,7 @@ public class Order {
 
         order.domainEvents.add(
                 new OrderCreatedEvent(
+                        UUID.randomUUID(),
                         order.id,
                         order.customerId,
                         order.currency,

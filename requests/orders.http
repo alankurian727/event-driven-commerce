@@ -4,7 +4,7 @@ POST http://localhost:8080/api/orders
 Content-Type: application/json
 
 {
-  "customerId": "11111111-1111-1111-1111-111111111119",
+  "customerId": "11111111-1111-1111-1111-222222222224",
   "currency": "EUR",
   "items": [
     {
