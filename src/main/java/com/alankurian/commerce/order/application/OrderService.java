@@ -15,8 +15,12 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
 
-    public OrderService(OrderRepository orderRepository) {
+    private final OrderEventPublisher eventPublisher;
+
+    public OrderService(OrderRepository orderRepository,
+                        OrderEventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -38,6 +42,8 @@ public class OrderService {
         );
 
         var savedOrder = orderRepository.save(order);
+        savedOrder.domainEvents().forEach(eventPublisher::publish);
+        savedOrder.clearDomainEvents();
 
         return OrderResponse.from(savedOrder);
     }
