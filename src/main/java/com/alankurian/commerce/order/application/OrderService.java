@@ -42,8 +42,9 @@ public class OrderService {
         );
 
         var savedOrder = orderRepository.save(order);
-        savedOrder.domainEvents().forEach(eventPublisher::publish);
-        savedOrder.clearDomainEvents();
+        order.domainEvents().forEach(eventPublisher::publish);
+        order.clearDomainEvents();
+
 
         return OrderResponse.from(savedOrder);
     }
