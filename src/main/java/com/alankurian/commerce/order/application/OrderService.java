@@ -3,6 +3,7 @@ package com.alankurian.commerce.order.application;
 import com.alankurian.commerce.order.api.CreateOrderRequest;
 import com.alankurian.commerce.order.api.OrderResponse;
 import com.alankurian.commerce.order.domain.Order;
+import com.alankurian.commerce.order.domain.OrderItem;
 import com.alankurian.commerce.order.domain.OrderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,10 +22,19 @@ public class OrderService {
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request) {
 
+        var items = request.items()
+                .stream()
+                .map(item -> OrderItem.create(
+                        item.productId(),
+                        item.quantity(),
+                        item.unitPrice()
+                ))
+                .toList();
+
         var order = Order.create(
                 request.customerId(),
-                request.totalAmount(),
-                request.currency()
+                request.currency(),
+                items
         );
 
         var savedOrder = orderRepository.save(order);

@@ -1,14 +1,18 @@
 package com.alankurian.commerce.order.domain;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -37,6 +41,11 @@ public class Order {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
+    @OneToMany(mappedBy = "order",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>();
+
     protected Order() {
         // Required by JPA
     }
@@ -44,12 +53,10 @@ public class Order {
     private Order(
             UUID id,
             UUID customerId,
-            BigDecimal totalAmount,
             String currency
     ) {
         this.id = id;
         this.customerId = customerId;
-        this.totalAmount = totalAmount;
         this.currency = currency;
         this.status = OrderStatus.CREATED;
 
@@ -60,15 +67,84 @@ public class Order {
 
     public static Order create(
             UUID customerId,
-            BigDecimal totalAmount,
-            String currency
+            String currency,
+            List<OrderItem> items
     ) {
-        return new Order(
+        var order =  new Order(
                 UUID.randomUUID(),
                 customerId,
-                totalAmount,
                 currency
         );
+        order.items.addAll(items);
+        order.totalAmount = order.calculateTotal();
+
+        return order;
+    }
+
+    public void reserveInventory() {
+
+        if (status != OrderStatus.CREATED) {
+            throw new IllegalStateException(
+                    "Inventory can only be reserved for a created order"
+            );
+        }
+
+        status = OrderStatus.INVENTORY_RESERVED;
+        updatedAt = OffsetDateTime.now();
+    }
+
+    public void markPaymentPending() {
+
+        if (status != OrderStatus.INVENTORY_RESERVED) {
+            throw new IllegalStateException(
+                    "Payment can only start after inventory reservation"
+            );
+        }
+
+        status = OrderStatus.PAYMENT_PENDING;
+        updatedAt = OffsetDateTime.now();
+    }
+
+    public void markPaid() {
+
+        if (status != OrderStatus.PAYMENT_PENDING) {
+            throw new IllegalStateException(
+                    "Order must be awaiting payment"
+            );
+        }
+
+        status = OrderStatus.PAID;
+        updatedAt = OffsetDateTime.now();
+    }
+
+    public void confirm() {
+
+        if (status != OrderStatus.PAID) {
+            throw new IllegalStateException(
+                    "Only paid orders can be confirmed"
+            );
+        }
+
+        status = OrderStatus.CONFIRMED;
+        updatedAt = OffsetDateTime.now();
+    }
+
+    public void cancel() {
+
+        if (status == OrderStatus.CONFIRMED) {
+            throw new IllegalStateException(
+                    "Confirmed orders cannot be cancelled"
+            );
+        }
+
+        status = OrderStatus.CANCELLED;
+        updatedAt = OffsetDateTime.now();
+    }
+
+    private BigDecimal calculateTotal() {
+        return items.stream()
+                .map(OrderItem::totalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public UUID getId() {
